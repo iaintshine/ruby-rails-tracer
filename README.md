@@ -29,7 +29,7 @@ Or install it yourself as:
 require 'rack/tracer'
 require 'rails/tracer'
 
-Rails.configuration.middleware.user(Rack::Tracer)
+Rails.configuration.middleware.use(Rack::Tracer)
 Rails.configuration.middleware.insert_after(Rack::Tracer, Rails::Rack::Tracer)
 ```
 
