@@ -33,7 +33,7 @@ module ActiveRecord
                                  tags: {
                                   'component' => 'ActiveRecord',
                                   'span.kind' => 'client',
-                                  'db.user' => connection_config.fetch(:username),
+                                  'db.user' => connection_config.fetch(:username, 'unknown'),
                                   'db.instance' => connection_config.fetch(:database),
                                   'db.vendor' => connection_config.fetch(:adapter),
                                   'db.connection_id' => fields.fetch(:connection_id, 'unknown'),
