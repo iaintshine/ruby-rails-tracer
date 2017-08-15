@@ -2,10 +2,10 @@
 
 This gem is an attempt to introduce OpenTracing instrumentation into Rails. It's in a very early stage. 
 
-When you use `rack-tracer`, the generated operation name corresponds to the request's http method e.g. GET, POST etc.
-It's not perfect. You need to dig into the trace to understand with what url it's related. 
+The following instrumentation is supported:
 
-The `rails-tracer` introduces another rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names in the form `ControllerName#action`.
+* ActionDispatch - The library introduces a rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names based on information supplied by ActionDispatch.
+* ActiveRecord - The library hooks up into Rails, and instruments all ActiveRecord query. 
 
 ## Installation
 
@@ -23,7 +23,14 @@ Or install it yourself as:
 
     $ gem install rails-tracer
 
-## Usage
+## ActionDispatch 
+
+When you use `rack-tracer`, the generated operation name corresponds to the request's http method e.g. GET, POST etc.
+It's not perfect. You need to dig into the trace to understand with what url it's related. 
+
+The `rails-tracer` introduces another rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names in the form `ControllerName#action`.
+
+### Usage
 
 ```ruby
 require 'rack/tracer'
@@ -31,6 +38,41 @@ require 'rails/tracer'
 
 Rails.configuration.middleware.use(Rack::Tracer)
 Rails.configuration.middleware.insert_after(Rack::Tracer, Rails::Rack::Tracer)
+```
+
+## ActiveRecord
+
+The library hooks up into Rails using `ActiveSupport::Notifications`, and instruments all `ActiveRecord` query. 
+
+### Usage
+
+Auto-instrumentation example. 
+
+```ruby
+require 'rails/tracer'
+
+ActiveRecord::Tracer.instrument(tracer: OpenTracing.global_tracer, active_span: -> { OpenTracing.global_tracer.active_span })
+```
+
+There are times when you might want to skip ActiveRecord's magic, and use connection directly. Still the library 
+can help you with span creation. Instead of auto-instrumenting you can manually call `ActiveRecord::Tracer.start_span` as shown below.
+
+```ruby
+def q(name, sql)
+  span = ActiveRecord::Tracer.start_span(name, 
+                                          tracer: OpenTracing.global_tracer,
+                                          active_span: -> { OpenTracing.global_tracer.active_span },
+                                          sql: sql)
+  ActiveRecord::Base.
+    connection.
+    raw_connection.
+    query(sql).
+    each(as: :hash)
+ensure
+  span&.finish
+end
+
+q("FirstUser", "SELECT * FROM users LIMIT 1")
 ```
 
 ## Development
