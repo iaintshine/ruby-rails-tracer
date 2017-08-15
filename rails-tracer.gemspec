@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "rails-tracer"
-  spec.version       = "0.1.0"
+  spec.version       = "0.1.1"
   spec.authors       = ["iaintshine"]
   spec.email         = ["bodziomista@gmail.com"]
 
