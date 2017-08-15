@@ -3,7 +3,7 @@ require "rack/tracer"
 require "rack/mock"
 
 RSpec.describe Rails::Rack::Tracer do
-  let(:tracer) { RecordingTracer.new }
+  let(:tracer) { Test::Tracer.new }
   let(:env) { Rack::MockRequest.env_for('/api/user', method: 'GET') }
   let(:response) { [200, {'Content-Type' => 'application/json'}, ['{"users": []}']] }
 
