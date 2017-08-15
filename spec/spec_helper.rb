@@ -1,9 +1,8 @@
 require "bundler/setup"
 require "simplecov"
 require "simplecov-console"
+require "test/tracer"
 require "rails/tracer"
-
-require_relative "support/recording_tracer"
 
 SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
     SimpleCov::Formatter::HTMLFormatter,
