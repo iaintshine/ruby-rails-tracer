@@ -7,8 +7,8 @@ module ActiveSupport
           events = %w(read write generate delete clear)
           events.each do |event|
             ActiveSupport::Notifications.subscribe("cache_#{event}.active_support") do |*args|
-              ActiveSupport::Cache::Tracer.instrument_event(tracer: OpenTracing.global_tracer,
-                                                            active_span: -> { OpenTracing.global_tracer.active_span },
+              ActiveSupport::Cache::Tracer.instrument_event(tracer: tracer,
+                                                            active_span: active_span,
                                                             event: event,
                                                             args: args)
             end
@@ -29,7 +29,6 @@ module ActiveSupport
         end
 
         def start_span(operation_name, tracer: OpenTracing.global_tracer, active_span: nil, start_time: Time.now, event:, **fields)
-          puts fields
           span = tracer.start_span(operation_name,
                                    child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
                                    start_time: start_time,
