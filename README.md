@@ -6,6 +6,7 @@ The following instrumentation is supported:
 
 * ActionDispatch - The library introduces a rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names based on information supplied by ActionDispatch.
 * ActiveRecord - The library hooks up into Rails, and instruments all ActiveRecord query. 
+* ActionSupport::Cache - The library hooks up into Rails, and instruments cache events.
 
 ## Installation
 
@@ -51,7 +52,8 @@ Auto-instrumentation example.
 ```ruby
 require 'rails/tracer'
 
-ActiveRecord::Tracer.instrument(tracer: OpenTracing.global_tracer, active_span: -> { OpenTracing.global_tracer.active_span })
+ActiveRecord::Tracer.instrument(tracer: OpenTracing.global_tracer,
+                               active_span: -> { OpenTracing.global_tracer.active_span })
 ```
 
 There are times when you might want to skip ActiveRecord's magic, and use connection directly. Still the library 
@@ -73,6 +75,39 @@ ensure
 end
 
 q("FirstUser", "SELECT * FROM users LIMIT 1")
+```
+
+## ActiveSupport::Cache
+
+The library hooks up into Rails using `ActiveSupport::Notifications`, and instruments all `ActiveSupport::Cache` events. 
+
+### Usage
+
+Auto-instrumentation example. 
+
+```ruby
+require 'rails/tracer'
+
+ActiveSupport::Cache::Tracer.instrument(tracer: OpenTracing.global_tracer, 
+                                        active_span: -> { OpenTracing.global_tracer.active_span })
+```
+
+If you want to skip the auto-instrumentation, still the library can help you with span creation and setting up proper tags. Instead of auto-instrumenting, as shown above, you can manually call `ActiveSupport::Cache::Tracer.start_span` as shown below.
+
+```ruby
+def read(key)
+  span = ActiveSupport::Cache::Tracer.start_span("InMemoryCache#read", 
+                                                 tracer: OpenTracing.global_tracer,
+                                                 active_span: -> { OpenTracing.global_tracer.active_span },
+                                                 key: key)
+  result = in_memory_cache[key]
+  span.set_tag('cache.hit', !!result) 
+  result
+ensure
+  span&.finish
+end
+
+read("user-1")
 ```
 
 ## Development
