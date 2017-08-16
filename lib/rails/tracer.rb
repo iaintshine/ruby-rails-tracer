@@ -1,2 +1,3 @@
-require_relative "rack/tracer"
-require_relative "active_record/tracer"
+require "rails/rack/tracer"
+require "rails/active_record/tracer"
+require "rails/active_support/cache/tracer"

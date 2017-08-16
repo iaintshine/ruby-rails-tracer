@@ -1,18 +1,20 @@
 require "spec_helper"
 
-RSpec.describe ActiveRecord::Tracer do
+RSpec.describe ActiveSupport::Cache::Tracer do
   let(:tracer) { Test::Tracer.new }
+  let(:test_key) { "test-key" }
 
   describe "active span propagation" do
     let(:root_span) { tracer.start_span("root") }
 
     before do
-      @active_record_tracer = ActiveRecord::Tracer.instrument(tracer: tracer, active_span: -> { root_span })
-      Article.first
+      @cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { root_span })
+      Rails.cache.read(test_key)
     end
 
     after do
-      ActiveSupport::Notifications.unsubscribe(@active_record_tracer)
+      ActiveSupport::Notifications.unsubscribe(@cache_tracer)
+      Rails.cache.clear
     end
 
     it "creates the new span with active span trace_id" do
@@ -28,12 +30,13 @@ RSpec.describe ActiveRecord::Tracer do
 
   describe "auto-instrumentation" do
     before do
-      @active_record_tracer = ActiveRecord::Tracer.instrument(tracer: tracer)
-      Article.first
+      @cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer)
+      Rails.cache.read(test_key)
     end
 
     after do
-      ActiveSupport::Notifications.unsubscribe(@active_record_tracer)
+      ActiveSupport::Notifications.unsubscribe(@cache_tracer)
+      Rails.cache.clear
     end
 
     it "creates a new span" do
@@ -41,27 +44,42 @@ RSpec.describe ActiveRecord::Tracer do
     end
 
     it "sets operation_name to event's name" do
-      expect(tracer.finished_spans.first.operation_name).to eq("Article Load")
+      expect(tracer.finished_spans.first.operation_name).to eq("cache.read")
     end
 
     it "sets standard OT tags" do
       tags = tracer.finished_spans.first.tags
       [
-        ['component', 'ActiveRecord'],
+        ['component', 'ActiveSupport::Cache'],
         ['span.kind', 'client']
       ].each do |key, value|
         expect(tags[key]).to eq(value), "expected tag '#{key}' value to equal '#{value}', got '#{tags[key]}'"
       end
     end
 
-    it "sets database specific OT tags" do
+    it "sets cache specific OT tags" do
       tags = tracer.finished_spans.first.tags
       [
-        ['db.type', 'sql'],
-        ['db.vendor', 'sqlite3'],
-        ['db.statement', 'SELECT  "articles".* FROM "articles" ORDER BY "articles"."id" ASC LIMIT ?'],
+        ['cache.key', test_key],
       ].each do |key, value|
         expect(tags[key]).to eq(value), "expected tag '#{key}' value to equal '#{value}', got #{tags[key]}"
+      end
+    end
+
+    context "cache entry not found during read" do
+      it "sets cache.hit tag to false" do
+        Rails.cache.read(test_key)
+        tags = tracer.finished_spans.first.tags
+        expect(tags['cache.hit']).to eq(false)
+      end
+    end
+
+    context "cache entry found during read" do
+      it "sets cache.hit tag to true" do
+        Rails.cache.write(test_key, "a value")
+        Rails.cache.read(test_key)
+        tags = tracer.finished_spans.last.tags
+        expect(tags['cache.hit']).to eq(true)
       end
     end
   end
