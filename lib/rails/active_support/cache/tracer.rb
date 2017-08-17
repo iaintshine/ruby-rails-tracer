@@ -3,7 +3,7 @@ module ActiveSupport
     module Tracer
       class << self
         # TODO: In Rails 4.0+ it's possible to  subscribe to start events
-        def instrument(tracer: OpenTracing.global_tracer, active_span: nil)
+        def instrument(tracer: OpenTracing.global_tracer, active_span: nil, dalli: false)
           events = %w(read write generate delete clear)
           events.each do |event|
             ActiveSupport::Notifications.subscribe("cache_#{event}.active_support") do |*args|
@@ -13,6 +13,12 @@ module ActiveSupport
                                                             args: args)
             end
           end
+
+          return unless dalli && defined?(ActiveSupport::Cache::DalliStore)
+
+          require 'rails/active_support/cache/stores/dalli/tracer'
+
+          Dalli::Tracer.instrument(tracer: tracer, active_span: active_span)
         end
 
         def instrument_event(tracer: OpenTracing.global_tracer, active_span: nil, event:, args:)
