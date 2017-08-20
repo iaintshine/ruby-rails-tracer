@@ -3,7 +3,6 @@ language: ruby
 rvm:
   - 2.3.4
 before_install: 
-  - docker-compose --version
-  - docker-compose up -d
-  - docker ps
   - gem install bundler -v 1.15.3
+services:
+  - memcached
