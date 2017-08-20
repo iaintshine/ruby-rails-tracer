@@ -83,4 +83,60 @@ RSpec.describe ActiveSupport::Cache::Tracer do
       end
     end
   end
+
+  describe "dalli store auto-instrumentation option" do
+    def instrument(dalli:)
+      cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer, dalli: dalli)
+      ActiveSupport::Notifications.unsubscribe(cache_tracer)
+    end
+
+    context "Dalli wasn't required" do
+      context "dalli: false" do
+        let(:enabled) { false }
+
+        it "doesn't enable dalli auto-instrumentation" do
+          expect(Dalli::Tracer).not_to receive(:instrument)
+          instrument(dalli: enabled)
+        end
+      end
+
+      context "dalli: true" do
+        let(:enabled) { true }
+
+        before do
+          HiddenDalliStore = ActiveSupport::Cache::DalliStore
+          ActiveSupport::Cache.send(:remove_const, "DalliStore")
+        end
+
+        after do
+          ActiveSupport::Cache::DalliStore = HiddenDalliStore
+        end
+
+        it "doesn't enable dalli auto-instrumentation" do
+          expect(Dalli::Tracer).not_to receive(:instrument)
+          instrument(dalli: enabled)
+        end
+      end
+    end
+
+    context "Dalli was required" do
+      context "dalli: false" do
+        let(:enabled) { false }
+
+        it "doesn't enable dalli auto-instrumentation" do
+          expect(Dalli::Tracer).not_to receive(:instrument)
+          instrument(dalli: enabled)
+        end
+      end
+
+      context "dalli: true" do
+        let(:enabled) { true }
+
+        it "enables dalli auto-instrumentation" do
+          expect(Dalli::Tracer).to receive(:instrument)
+          instrument(dalli: enabled)
+        end
+      end
+    end
+  end
 end
