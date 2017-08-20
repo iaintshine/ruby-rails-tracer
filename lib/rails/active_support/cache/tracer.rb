@@ -16,7 +16,7 @@ module ActiveSupport
 
           return unless dalli && defined?(ActiveSupport::Cache::DalliStore)
 
-          require 'rails/active_support/cache/stores/dalli/tracer'
+          require 'rails/active_support/cache/dalli_tracer'
 
           Dalli::Tracer.instrument(tracer: tracer, active_span: active_span)
         end

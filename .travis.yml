@@ -2,4 +2,8 @@ sudo: false
 language: ruby
 rvm:
   - 2.3.4
-before_install: gem install bundler -v 1.15.3
+before_install: 
+  - docker-compose --version
+  - docker-compose start
+  - docker ps
+  - gem install bundler -v 1.15.3
