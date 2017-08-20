@@ -1,5 +1,8 @@
-sudo: false
+sudo: true
 language: ruby
 rvm:
   - 2.3.4
-before_install: gem install bundler -v 1.15.3
+before_install: 
+  - gem install bundler -v 1.15.3
+services:
+  - memcached

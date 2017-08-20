@@ -92,6 +92,14 @@ ActiveSupport::Cache::Tracer.instrument(tracer: OpenTracing.global_tracer,
                                         active_span: -> { OpenTracing.global_tracer.active_span })
 ```
 
+If you use [Dalli](https://github.com/petergoldstein/dalli/) and `ActiveSupport::Cache::DalliStore`, as your application's cache store, you can get low-level details about Memcached calls by setting `dalli` option to `true`.
+
+```ruby
+ActiveSupport::Cache::Tracer.instrument(tracer: OpenTracing.global_tracer, 
+                                        active_span: -> { OpenTracing.global_tracer.active_span },
+                                        dalli: true)
+```
+
 If you want to skip the auto-instrumentation, still the library can help you with span creation and setting up proper tags. Instead of auto-instrumenting, as shown above, you can manually call `ActiveSupport::Cache::Tracer.start_span` as shown below.
 
 ```ruby
