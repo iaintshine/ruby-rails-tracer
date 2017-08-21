@@ -1,3 +1,10 @@
+## v0.4.0
+
+* Start maintaining CHANGELOG.md [#18](https://github.com/iaintshine/ruby-rails-tracer/pull/18)
+* Auto enable tracing-logger when Dalli is auto-instrumented [#17](https://github.com/iaintshine/ruby-rails-tracer/pull/17)
+* Introduce Dalli and ActiveSupport::Cache::DalliStore auto-instrumentation [#9](https://github.com/iaintshine/ruby-rails-tracer/pull/9)
+* Introduce docker-compose with all required external dependencies. 
+
 ## v0.3.0
 
 * Introduce ActiveSupport::Cache auto-instrumentation [#4](https://github.com/iaintshine/ruby-rails-tracer/pull/4)
