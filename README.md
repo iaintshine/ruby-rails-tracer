@@ -92,7 +92,7 @@ ActiveSupport::Cache::Tracer.instrument(tracer: OpenTracing.global_tracer,
                                         active_span: -> { OpenTracing.global_tracer.active_span })
 ```
 
-If you use [Dalli](https://github.com/petergoldstein/dalli/) and `ActiveSupport::Cache::DalliStore`, as your application's cache store, you can get low-level details about Memcached calls by setting `dalli` option to `true`.
+If you use [Dalli](https://github.com/petergoldstein/dalli/) and `ActiveSupport::Cache::DalliStore` as your application's cache store, you can get low-level details about Memcached calls by setting `dalli` option to `true`. If you want to get even more details, simply require [tracing-logger](https://github.com/iaintshine/ruby-tracing-logger) and Dalli error logs will be attached to the current active span. The library will wrap current `Dalli.logger` into a `Tracing::CompositeLogger` and append additional `Tracing::Logger` with severity level set to `Logger::ERROR`.
 
 ```ruby
 ActiveSupport::Cache::Tracer.instrument(tracer: OpenTracing.global_tracer, 
