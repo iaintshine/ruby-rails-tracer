@@ -23,4 +23,5 @@ end
 
 require "rails_helper"
 require "test/tracer"
+require "tracing/logger"
 require "rails/tracer"

@@ -86,7 +86,7 @@ RSpec.describe ActiveSupport::Cache::Tracer do
 
   describe "dalli store auto-instrumentation option" do
     def instrument(dalli:)
-      cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer, dalli: dalli)
+      cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { }, dalli: dalli)
       ActiveSupport::Notifications.unsubscribe(cache_tracer)
     end
 
@@ -135,6 +135,45 @@ RSpec.describe ActiveSupport::Cache::Tracer do
         it "enables dalli auto-instrumentation" do
           expect(Dalli::Tracer).to receive(:instrument)
           instrument(dalli: enabled)
+        end
+
+        describe "Dalli tracing logger" do
+          context "logger already instrumented" do
+            it "keeps current logger intact" do
+              logger = Tracing::Logger.new(active_span: -> { })
+              Dalli.logger = logger
+              instrument(dalli: enabled)
+              expect(Dalli.logger).to eq(logger)
+
+              logger = Tracing::CompositeLogger.new(logger)
+              Dalli.logger = logger
+              instrument(dalli: enabled)
+              expect(Dalli.logger).to eq(logger)
+            end
+          end
+
+          context "logger wasn't instrumented" do
+            let(:stdout_logger) { Logger.new(STDOUT) }
+
+            before do
+              Dalli.logger = stdout_logger
+              instrument(dalli: enabled)
+            end
+
+            it "creates composite logger" do
+              expect(Dalli.logger).to be_instance_of(Tracing::CompositeLogger)
+            end
+
+            it "wraps existing logger" do
+              expect(Dalli.logger.destinations).to include(stdout_logger)
+            end
+
+            it "wraps tracing logger with ERROR severity level" do
+              logger = Dalli.logger.destinations.find { |d| d.is_a?(Tracing::Logger) }
+              expect(logger).not_to be_nil
+              expect(logger.level).to eq(Logger::ERROR)
+            end
+          end
         end
       end
     end
