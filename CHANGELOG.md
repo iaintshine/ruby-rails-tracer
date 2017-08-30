@@ -1,3 +1,7 @@
+## v0.4.1
+
+* Use tracing matchers in tests [#19](https://github.com/iaintshine/ruby-rails-tracer/pull/19)
+
 ## v0.4.0
 
 * Start maintaining CHANGELOG.md [#18](https://github.com/iaintshine/ruby-rails-tracer/pull/18)
