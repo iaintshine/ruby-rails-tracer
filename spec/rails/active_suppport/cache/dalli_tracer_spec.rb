@@ -27,21 +27,18 @@ RSpec.describe Dalli::Tracer do
     end
 
     it "creates spans for each part of the chain" do
-      expect(tracer.finished_spans).not_to be_empty
-      expect(tracer.finished_spans.size).to eq(3)
+      expect(tracer).to have_spans(3)
     end
 
     it "all spans contains the same trace_id" do
-      tracer.finished_spans.each do |span|
-        expect(span.context.trace_id).to eq(root_span.context.trace_id)
-      end
+      expect(tracer).to have_traces(1)
     end
 
     it "propagates parent child relationship properly" do
       server_span = tracer.finished_spans[0]
       client_span = tracer.finished_spans[1]
-      expect(server_span.context.parent_span_id).to eq(root_span.context.span_id)
-      expect(client_span.context.parent_span_id).to eq(root_span.context.span_id)
+      expect(server_span).to be_child_of(root_span)
+      expect(client_span).to be_child_of(root_span)
     end
   end
 
@@ -56,30 +53,28 @@ RSpec.describe Dalli::Tracer do
     end
 
     it "creates a new span" do
-      expect(tracer.finished_spans).not_to be_empty
+      expect(tracer).to have_spans.finished
     end
 
     it "creates 2 spans, one for a server, and second for client" do
-      expect(tracer.finished_spans.count).to eq(2)
+      expect(tracer).to have_spans(2).finished
     end
 
     describe "server span" do
       it "sets operation_name to ClassName#method" do
-        expect(tracer.finished_spans.first.operation_name).to eq("Dalli::Server#request")
+        expect(tracer).to have_span("Dalli::Server#request")
       end
 
       it "sets standard OT tags" do
-        tags = tracer.finished_spans.first.tags
         [
           ['component', 'Dalli::Server'],
           ['span.kind', 'client']
         ].each do |key, value|
-          expect(tags[key]).to eq(value), "expected tag '#{key}' value to equal '#{value}', got '#{tags[key]}'"
+          expect(tracer).to have_span.with_tag(key, value)
         end
       end
 
       it "sets cache specific OT tags" do
-        tags = tracer.finished_spans.first.tags
         [
           ['db.statement', 'get'],
           ['db.type', 'memcached'],
@@ -87,14 +82,14 @@ RSpec.describe Dalli::Tracer do
           ['peer.port', port],
           ['peer.weight', 1],
         ].each do |key, value|
-          expect(tags[key]).to eq(value), "expected tag '#{key}' value to equal '#{value}', got #{tags[key]}"
+          expect(tracer).to have_span.with_tag(key, value)
         end
       end
     end
 
     describe "client span" do
       it "sets operation_name to ClassName#method" do
-        expect(tracer.finished_spans.last.operation_name).to eq("Dalli::Client#perform")
+        expect(tracer).to have_span("Dalli::Client#perform")
       end
     end
   end

@@ -18,13 +18,12 @@ RSpec.describe ActiveSupport::Cache::Tracer do
     end
 
     it "creates the new span with active span trace_id" do
-      cache_span = tracer.finished_spans.last
-      expect(cache_span.context.trace_id).to eq(root_span.context.trace_id)
+      expect(tracer).to have_traces(1)
     end
 
     it "creates the new span with active span as a parent" do
       cache_span = tracer.finished_spans.last
-      expect(cache_span.context.parent_span_id).to eq(root_span.context.span_id)
+      expect(cache_span).to be_child_of(root_span)
     end
   end
 
@@ -40,37 +39,34 @@ RSpec.describe ActiveSupport::Cache::Tracer do
     end
 
     it "creates a new span" do
-      expect(tracer.finished_spans).not_to be_empty
+      expect(tracer).to have_spans
     end
 
     it "sets operation_name to event's name" do
-      expect(tracer.finished_spans.first.operation_name).to eq("cache.read")
+      expect(tracer).to have_span("cache.read")
     end
 
     it "sets standard OT tags" do
-      tags = tracer.finished_spans.first.tags
       [
         ['component', 'ActiveSupport::Cache'],
         ['span.kind', 'client']
       ].each do |key, value|
-        expect(tags[key]).to eq(value), "expected tag '#{key}' value to equal '#{value}', got '#{tags[key]}'"
+        expect(tracer).to have_span.with_tag(key, value)
       end
     end
 
     it "sets cache specific OT tags" do
-      tags = tracer.finished_spans.first.tags
       [
         ['cache.key', test_key],
       ].each do |key, value|
-        expect(tags[key]).to eq(value), "expected tag '#{key}' value to equal '#{value}', got #{tags[key]}"
+        expect(tracer).to have_span.with_tag(key, value)
       end
     end
 
     context "cache entry not found during read" do
       it "sets cache.hit tag to false" do
         Rails.cache.read(test_key)
-        tags = tracer.finished_spans.first.tags
-        expect(tags['cache.hit']).to eq(false)
+        expect(tracer).to have_span.with_tag('cache.hit', false)
       end
     end
 
@@ -78,8 +74,7 @@ RSpec.describe ActiveSupport::Cache::Tracer do
       it "sets cache.hit tag to true" do
         Rails.cache.write(test_key, "a value")
         Rails.cache.read(test_key)
-        tags = tracer.finished_spans.last.tags
-        expect(tags['cache.hit']).to eq(true)
+        expect(tracer).to have_span.with_tag('cache.hit', false)
       end
     end
   end

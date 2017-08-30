@@ -17,7 +17,8 @@ RSpec.describe Rails::Rack::Tracer do
     it 'leaves the operation_name as it was' do
       respond_with { response }
 
-      expect(tracer.finished_spans.first.operation_name).to eq('GET')
+      expect(tracer).to have_spans(1)
+      expect(tracer).to have_span('GET').finished
     end
   end
 
@@ -29,7 +30,8 @@ RSpec.describe Rails::Rack::Tracer do
         response
       end
 
-      expect(tracer.finished_spans.first.operation_name).to eq('Api::UsersController#index')
+      expect(tracer).to have_spans(1)
+      expect(tracer).to have_span('Api::UsersController#index').finished
     end
   end
 
