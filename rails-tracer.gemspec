@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary       = %q{Rack OpenTracing middleware enhanced for Rails}
   spec.description   = %q{}
   spec.homepage      = "https://github.com/iaintshine/ruby-rails-tracer"
+  spec.license       = "Apache-2.0"
 
   spec.required_ruby_version = ">= 2.2.0"
 
