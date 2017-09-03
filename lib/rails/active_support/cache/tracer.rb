@@ -45,6 +45,9 @@ module ActiveSupport
                             start_time: start,
                             **payload)
 
+
+          Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object]) if payload[:exception]
+
           span.finish(end_time: finish)
         end
 
