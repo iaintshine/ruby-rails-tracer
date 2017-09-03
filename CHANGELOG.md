@@ -1,3 +1,8 @@
+## v0.4.2
+
+* Test the gem with multiple Ruby versions 2.2+ [#20](https://github.com/iaintshine/ruby-rails-tracer/pull/20)
+* Set explicit Ruby version requirement in gemspec.
+
 ## v0.4.1
 
 * Use tracing matchers in tests [#19](https://github.com/iaintshine/ruby-rails-tracer/pull/19)
