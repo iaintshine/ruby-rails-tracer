@@ -1,3 +1,7 @@
+## v0.4.3
+
+* Handle instrumentation exceptions and mark spans as failed [#21](https://github.com/iaintshine/ruby-rails-tracer/pull/21)
+
 ## v0.4.2
 
 * Test the gem with multiple Ruby versions 2.2+ [#20](https://github.com/iaintshine/ruby-rails-tracer/pull/20)
