@@ -77,6 +77,16 @@ RSpec.describe ActiveSupport::Cache::Tracer do
         expect(tracer).to have_span.with_tag('cache.hit', false)
       end
     end
+
+    context "exception thrown during cache operation" do
+      it "sets error on span" do
+        exception = Timeout::Error.new
+        expect { Rails.cache.fetch(test_key) { raise exception } }.to raise_error(exception)
+        expect(tracer).to have_span
+          .with_tag('error', true)
+          .with_log(event: 'error', :'error.object' => exception)
+      end
+    end
   end
 
   describe "dalli store auto-instrumentation option" do
