@@ -11,6 +11,14 @@ gemfile:
   - gemfiles/rails_42.gemfile
   - gemfiles/rails_50.gemfile
   - gemfiles/rails_51.gemfile
+matrix:
+  exclude:
+    - rvm: 2.4
+      gemfile: gemfiles/rails_32.gemfile
+    - rvm: 2.4
+      gemfile: gemfiles/rails_40.gemfile
+    - rvm: 2.4
+      gemfile: gemfiles/rails_41.gemfile
 before_install: 
   - gem install bundler -v 1.15.3
 services:
