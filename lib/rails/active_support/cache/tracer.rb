@@ -1,5 +1,13 @@
 module ActiveSupport
   module Cache
+    class Store
+      # See the PR https://github.com/rails/rails/pull/15943/files
+      # In order to make the instrumentation to work we need to override the original implementation
+      def self.instrument
+        true
+      end
+    end
+
     module Tracer
       class << self
         # TODO: In Rails 4.0+ it's possible to  subscribe to start events
@@ -45,8 +53,9 @@ module ActiveSupport
                             start_time: start,
                             **payload)
 
-
-          Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object]) if payload[:exception]
+          if payload[:exception]
+            Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object] || payload[:exception])
+          end
 
           span.finish(end_time: finish)
         end

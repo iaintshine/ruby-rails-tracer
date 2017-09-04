@@ -26,7 +26,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rack-tracer", "~> 0.3.0"
   spec.add_dependency "method-tracer", "~> 1.1"
 
-  spec.add_development_dependency "rails", "~> 5.1.3"
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "puma", "~> 3.7"
   spec.add_development_dependency "rspec-rails", "~> 3.6"
@@ -38,7 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.15"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "rack", "~> 2.0"
   spec.add_development_dependency "simplecov"
   spec.add_development_dependency "simplecov-console"
+  spec.add_development_dependency "appraisal"
 end
