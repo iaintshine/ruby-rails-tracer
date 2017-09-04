@@ -80,11 +80,18 @@ RSpec.describe ActiveSupport::Cache::Tracer do
 
     context "exception thrown during cache operation" do
       it "sets error on span" do
-        exception = Timeout::Error.new
+        exception = Timeout::Error.new("couldn't reach cache server")
         expect { Rails.cache.fetch(test_key) { raise exception } }.to raise_error(exception)
-        expect(tracer).to have_span
-          .with_tag('error', true)
-          .with_log(event: 'error', :'error.object' => exception)
+        if Gem::Version.new(Rails.version) >= Gem::Version.new("5.0.0")
+          # exception_object was introduced in Rails version 5+
+          expect(tracer).to have_span
+            .with_tag('error', true)
+            .with_log(event: 'error', :'error.object' => exception)
+        else
+          expect(tracer).to have_span
+            .with_tag('error', true)
+            .with_log(event: 'error', :'error.kind' => "Timeout::Error", message: "couldn't reach cache server")
+        end
       end
     end
   end
