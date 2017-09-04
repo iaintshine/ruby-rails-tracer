@@ -7,6 +7,7 @@ require 'database_cleaner'
 
 # Checks for pending migration and applies them before tests are run.
 # ActiveRecord::Migration.maintain_test_schema!
+system("cd spec/test_app; bin/rake db:create db:migrate db:test:prepare")
 
 RSpec.configure do |config|
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
