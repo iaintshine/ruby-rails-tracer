@@ -1,4 +1,5 @@
 require "spec_helper"
+require "spanmanager"
 
 RSpec.describe ActiveSupport::Cache::Tracer do
   let(:tracer) { Test::Tracer.new }
@@ -24,6 +25,53 @@ RSpec.describe ActiveSupport::Cache::Tracer do
     it "creates the new span with active span as a parent" do
       cache_span = tracer.finished_spans.last
       expect(cache_span).to be_child_of(root_span)
+    end
+  end
+
+  describe "nested context" do
+    let(:test_tracer) { Test::Tracer.new }
+    let(:tracer) { SpanManager::Tracer.new(test_tracer) }
+
+    before do
+      ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { tracer.active_span })
+
+      root = tracer.start_span("root")
+        Rails.cache.fetch(test_key) do
+          tracer.start_span("nested").finish
+          "test-value"
+        end
+      root.finish
+    end
+
+    after do
+      ActiveSupport::Cache::Tracer.disable
+      Rails.cache.clear
+    end
+
+    it "creates a single trace" do
+      expect(test_tracer).to have_traces(1)
+    end
+
+    it "creates 5 spans" do
+      expect(test_tracer).to have_spans(5)
+    end
+
+    if Gem::Version.new(Rails.version) >= Gem::Version.new("4.0.0")
+      it "creates nested spans tree" do
+        expect(test_tracer).to have_span("root")
+        expect(test_tracer).to have_span("cache.read").with_parent("root")
+        expect(test_tracer).to have_span("cache.generate").with_parent("root")
+        expect(test_tracer).to have_span("nested").with_parent("cache.generate")
+        expect(test_tracer).to have_span("cache.write").with_parent("root")
+      end
+    else
+      it "creates flat spans tree" do
+        expect(test_tracer).to have_span("root")
+        expect(test_tracer).to have_span("cache.read").with_parent("root")
+        expect(test_tracer).to have_span("cache.generate").with_parent("root")
+        expect(test_tracer).to have_span("nested").with_parent("root")
+        expect(test_tracer).to have_span("cache.write").with_parent("root")
+      end
     end
   end
 
