@@ -8,12 +8,12 @@ RSpec.describe ActiveSupport::Cache::Tracer do
     let(:root_span) { tracer.start_span("root") }
 
     before do
-      @cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { root_span })
+      ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { root_span })
       Rails.cache.read(test_key)
     end
 
     after do
-      ActiveSupport::Notifications.unsubscribe(@cache_tracer)
+      ActiveSupport::Cache::Tracer.disable
       Rails.cache.clear
     end
 
