@@ -7,12 +7,12 @@ RSpec.describe ActiveRecord::Tracer do
     let(:root_span) { tracer.start_span("root") }
 
     before do
-      @active_record_tracer = ActiveRecord::Tracer.instrument(tracer: tracer, active_span: -> { root_span })
+      ActiveRecord::Tracer.instrument(tracer: tracer, active_span: -> { root_span })
       Article.first
     end
 
     after do
-      ActiveSupport::Notifications.unsubscribe(@active_record_tracer)
+      ActiveRecord::Tracer.disable
     end
 
     it "creates the new span with active span trace_id" do
@@ -27,12 +27,12 @@ RSpec.describe ActiveRecord::Tracer do
 
   describe "auto-instrumentation" do
     before do
-      @active_record_tracer = ActiveRecord::Tracer.instrument(tracer: tracer)
+      ActiveRecord::Tracer.instrument(tracer: tracer)
       Article.count
     end
 
     after do
-      ActiveSupport::Notifications.unsubscribe(@active_record_tracer)
+      ActiveRecord::Tracer.disable
     end
 
     it "creates a new span" do
