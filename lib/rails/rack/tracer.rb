@@ -1,6 +1,23 @@
 module Rails
   module Rack
     class Tracer
+      class << self
+        def middlewares
+          Rails.configuration.middleware
+        end
+
+        def instrument
+          return unless defined?(::Rack::Tracer)
+          middlewares.use(::Rack::Tracer) unless middlewares.include?(::Rack::Tracer)
+          middlewares.insert_after(::Rack::Tracer, Rails::Rack::Tracer)
+        end
+
+        def disable
+          middlewares.delete(Rails::Rack::Tracer)
+          middlewares.delete(::Rack::Tracer)
+        end
+      end
+
       def initialize(app)
         @app = app
       end
