@@ -4,10 +4,23 @@ module ActiveRecord
 
     class << self
       def instrument(tracer: OpenTracing.global_tracer, active_span: nil)
-        ::ActiveSupport::Notifications.subscribe('sql.active_record') do |*args|
+        clear_subscribers
+        @subscriber = ::ActiveSupport::Notifications.subscribe('sql.active_record') do |*args|
           ActiveRecord::Tracer.sql(tracer: tracer, active_span: active_span, args: args)
         end
+
+        self
       end
+
+      def disable
+        if @subscriber
+          ActiveSupport::Notifications.unsubscribe(@subscriber)
+          @subscriber = nil
+        end
+
+        self
+      end
+      alias :clear_subscribers :disable
 
       def sql(tracer: OpenTracing.global_tracer, active_span: nil, args:)
         _, start, finish, _, payload = *args

@@ -18,12 +18,16 @@ module ActiveSupport
 
           instrument_dalli(tracer: tracer, active_span: active_span) if dalli
 
-          @subscribers
+          self
         end
 
         def disable
-          return unless @subscribers
-          @subscribers.each { |subscriber| ActiveSupport::Notifications.unsubscribe(subscriber) }
+          if  @subscribers
+            @subscribers.each { |subscriber| ActiveSupport::Notifications.unsubscribe(subscriber) }
+            @subscribers.clear
+          end
+
+          self
         end
 
         alias :clear_subscribers :disable

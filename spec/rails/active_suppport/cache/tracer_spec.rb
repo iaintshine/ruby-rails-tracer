@@ -77,12 +77,12 @@ RSpec.describe ActiveSupport::Cache::Tracer do
 
   describe "auto-instrumentation" do
     before do
-      @cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer)
+      ActiveSupport::Cache::Tracer.instrument(tracer: tracer)
       Rails.cache.read(test_key)
     end
 
     after do
-      ActiveSupport::Notifications.unsubscribe(@cache_tracer)
+      ActiveSupport::Cache::Tracer.disable
       Rails.cache.clear
     end
 
@@ -146,8 +146,7 @@ RSpec.describe ActiveSupport::Cache::Tracer do
 
   describe "dalli store auto-instrumentation option" do
     def instrument(dalli:)
-      cache_tracer = ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { }, dalli: dalli)
-      ActiveSupport::Notifications.unsubscribe(cache_tracer)
+      ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: -> { }, dalli: dalli).disable
     end
 
     context "Dalli wasn't required" do
