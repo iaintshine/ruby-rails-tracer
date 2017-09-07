@@ -1,3 +1,11 @@
+## v0.5.0
+
+* Expose global Rails::Tracer which instruments all sub-modules [#26](https://github.com/iaintshine/ruby-rails-tracer/pull/26)
+* Allow to disable sub-tracers [#25](https://github.com/iaintshine/ruby-rails-tracer/pull/25)
+* Support Evented and Timed subscribers in cache instrumentation [#24](https://github.com/iaintshine/ruby-rails-tracer/pull/24)
+* Test and add support for multiple Rails versions - 3.2+ [#23](https://github.com/iaintshine/ruby-rails-tracer/pull/23)
+* Development instructions update [#27](https://github.com/iaintshine/ruby-rails-tracer/pull/27)
+
 ## v0.4.3
 
 * Handle instrumentation exceptions and mark spans as failed [#21](https://github.com/iaintshine/ruby-rails-tracer/pull/21)
