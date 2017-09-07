@@ -2,19 +2,23 @@ module Rails
   module Rack
     class Tracer
       class << self
-        def middlewares
-          Rails.configuration.middleware
-        end
-
-        def instrument
+        def instrument(tracer: OpenTracing.global_tracer, middlewares: Rails.configuration.middleware)
           return unless defined?(::Rack::Tracer)
-          middlewares.use(::Rack::Tracer) unless middlewares.include?(::Rack::Tracer)
+          @owns_all_middlewares = false
+          unless middlewares.include?(::Rack::Tracer)
+            middlewares.use(::Rack::Tracer, tracer: tracer)
+            @owns_all_middlewares = true
+          end
           middlewares.insert_after(::Rack::Tracer, Rails::Rack::Tracer)
         end
 
-        def disable
+        def disable(middlewares: Rails.configuration.middleware)
           middlewares.delete(Rails::Rack::Tracer)
-          middlewares.delete(::Rack::Tracer)
+          if @owns_all_middlewares
+            middlewares.delete(::Rack::Tracer)
+            @owns_all_middlewares = false
+          end
+        rescue
         end
       end
 
