@@ -1,6 +1,6 @@
 # OpenTracing Rails Instrumentation
 
-This gem is an attempt to introduce OpenTracing instrumentation into Rails. It's in a very early stage. 
+This gem is an attempt to introduce OpenTracing instrumentation into Rails. It's in an early stage. 
 
 The following instrumentation is supported:
 
@@ -24,6 +24,30 @@ Or install it yourself as:
 
     $ gem install rails-tracer
 
+## Rails::Tracer
+
+The library hooks up into Rails using `ActiveSupport::Notifications`, and instruments all previously mentioned modules. 
+To enable instrumentation, you can either use sub-tracers directly (see sections below) or global `Rails::Tracer` which 
+will enabled all of them (except for Rack/ActionDispatch instrumentation).
+
+### Configuration Options
+
+* `tracer: OpenTracing::Tracer` an OT compatible tracer. Default `OpenTracing.global_tracer`
+* `active_span: boolean` an active span provider. Default: `nil`.
+* `active_record: boolean` whether to enable `ActiveRecord` instrumentation. Default: `true`.
+* `active_support_cache: boolean` whether to enable `ActionDispatch::Cache` instrumentation. Default: `true`.
+  * `dalli: boolean` if set to `true` you will hook up into `Dalli` low-level details. Default: `false`.
+* `rack: boolean` whether to enable extended `Rack` instrumentation. Default: `false`.
+  * `middlewares: ActionDispatch::MiddlewareStack` a middlewares stack. Default: `Rails.configuration.middleware`.
+
+### Usage
+
+```ruby
+require 'rails/tracer'
+
+Rails::Tracer.instrument
+```
+
 ## ActionDispatch 
 
 When you use `rack-tracer`, the generated operation name corresponds to the request's http method e.g. GET, POST etc.
@@ -40,6 +64,14 @@ require 'rails/tracer'
 Rails.configuration.middleware.use(Rack::Tracer)
 Rails.configuration.middleware.insert_after(Rack::Tracer, Rails::Rack::Tracer)
 ```
+
+or simpler
+
+```ruby
+Rails::Rack::Tracer.instrument
+```
+
+optionally you can pass `tracer` argument to `instrument` method.
 
 ## ActiveRecord
 
