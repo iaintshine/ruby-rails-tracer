@@ -53,14 +53,7 @@ RSpec.describe ActiveRecord::Tracer do
     end
 
     it "sets database specific OT tags" do
-      # TODO: Once we add support for regex matchers in tracing-matchers
-      #       there will be no need for the ugly hack.
-      #       See: https://github.com/iaintshine/ruby-tracing-matchers/issues/15
-      sql = if Gem::Version.new(Rails.version) < Gem::Version.new("4.0.0")
-              'SELECT COUNT(*) FROM "articles" '
-            else
-              'SELECT COUNT(*) FROM "articles"'
-            end
+      sql = /SELECT COUNT\(\*\) FROM \"articles\"/
       [
         ['db.type', 'sql'],
         ['db.vendor', 'sqlite3'],
