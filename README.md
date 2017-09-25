@@ -1,12 +1,13 @@
 # OpenTracing Rails Instrumentation
 
-This gem is an attempt to introduce OpenTracing instrumentation into Rails. It's in an early stage. 
+This gem is an attempt to introduce OpenTracing instrumentation into Rails. 
 
 The following instrumentation is supported:
 
-* ActionDispatch - The library introduces a rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names based on information supplied by ActionDispatch.
+* ActionController - The library hooks up into Rails, and instruments events related to a action processing.  
 * ActiveRecord - The library hooks up into Rails, and instruments all ActiveRecord query. 
 * ActionSupport::Cache - The library hooks up into Rails, and instruments cache events.
+* ActionDispatch - The library introduces a rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names based on information supplied by ActionDispatch.
 
 ## Installation
 
@@ -34,6 +35,7 @@ will enabled all of them (except for Rack/ActionDispatch instrumentation).
 
 * `tracer: OpenTracing::Tracer` an OT compatible tracer. Default `OpenTracing.global_tracer`
 * `active_span: boolean` an active span provider. Default: `nil`.
+* `action_controller: boolean` whether to enable `ActionController` instrumentation. Default: `true`.
 * `active_record: boolean` whether to enable `ActiveRecord` instrumentation. Default: `true`.
 * `active_support_cache: boolean` whether to enable `ActionDispatch::Cache` instrumentation. Default: `true`.
   * `dalli: boolean` if set to `true` you will hook up into `Dalli` low-level details. Default: `false`.
@@ -48,30 +50,20 @@ require 'rails/tracer'
 Rails::Tracer.instrument
 ```
 
-## ActionDispatch 
+## ActionController
 
-When you use `rack-tracer`, the generated operation name corresponds to the request's http method e.g. GET, POST etc.
-It's not perfect. You need to dig into the trace to understand with what url it's related. 
-
-The `rails-tracer` introduces another rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names in the form `ControllerName#action`.
+The library hooks up into Rails using `ActiveSupport::Notifications`, and instruments events related to action processing. You can be sure that your whole action processing code will be wrapped into a new span with an operation name set to currently executing controller and action e.g. `ArticlesController#index`.
 
 ### Usage
 
+Auto-instrumentation example. 
+
 ```ruby
-require 'rack/tracer'
 require 'rails/tracer'
 
-Rails.configuration.middleware.use(Rack::Tracer)
-Rails.configuration.middleware.insert_after(Rack::Tracer, Rails::Rack::Tracer)
+ActionController::Tracer.instrument(tracer: OpenTracing.global_tracer,
+                                   active_span: -> { OpenTracing.global_tracer.active_span })
 ```
-
-or simpler
-
-```ruby
-Rails::Rack::Tracer.instrument
-```
-
-optionally you can pass `tracer` argument to `instrument` method.
 
 ## ActiveRecord
 
@@ -149,6 +141,31 @@ end
 
 read("user-1")
 ```
+
+## ActionDispatch 
+
+When you use `rack-tracer`, the generated operation name corresponds to the request's http method e.g. GET, POST etc.
+It's not perfect. You need to dig into the trace to understand with what url it's related. 
+
+The `rails-tracer` introduces another rack middleware, which is intended to be used together with `rack-tracer`, to generate more informative operation names in the form `ControllerName#action`.
+
+### Usage
+
+```ruby
+require 'rack/tracer'
+require 'rails/tracer'
+
+Rails.configuration.middleware.use(Rack::Tracer)
+Rails.configuration.middleware.insert_after(Rack::Tracer, Rails::Rack::Tracer)
+```
+
+or simpler
+
+```ruby
+Rails::Rack::Tracer.instrument
+```
+
+optionally you can pass `tracer` argument to `instrument` method.
 
 ## Development
 
