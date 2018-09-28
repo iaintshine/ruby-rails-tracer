@@ -7,12 +7,13 @@ module Rails
   module Tracer
     class << self
       def instrument(tracer: OpenTracing.global_tracer, active_span: nil,
+                     trace_if: nil,
                      rack: false, middlewares: Rails.configuration.middleware,
                      active_record: true,
                      active_support_cache: true, dalli: false)
-        Rails::Rack::Tracer.instrument(tracer: tracer, middlewares: middlewares) if rack
-        ActiveRecord::Tracer.instrument(tracer: tracer, active_span: active_span) if active_record
-        ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: active_span, dalli: dalli) if active_support_cache
+        Rails::Rack::Tracer.instrument(tracer: tracer, trace_if: trace_if, middlewares: middlewares) if rack
+        ActiveRecord::Tracer.instrument(tracer: tracer, active_span: active_span, trace_if: trace_if,) if active_record
+        ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: active_span, trace_if: trace_if, dalli: dalli) if active_support_cache
       end
 
       def disable

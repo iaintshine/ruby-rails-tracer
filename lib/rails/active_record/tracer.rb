@@ -3,9 +3,10 @@ module ActiveRecord
     DEFAULT_OPERATION_NAME = "sql.query".freeze
 
     class << self
-      def instrument(tracer: OpenTracing.global_tracer, active_span: nil)
+      def instrument(tracer: OpenTracing.global_tracer, active_span: nil, trace_if: nil)
         clear_subscribers
         @subscriber = ::ActiveSupport::Notifications.subscribe('sql.active_record') do |*args|
+          next unless trace_if.nil? || trace_if.call
           ActiveRecord::Tracer.sql(tracer: tracer, active_span: active_span, args: args)
         end
 

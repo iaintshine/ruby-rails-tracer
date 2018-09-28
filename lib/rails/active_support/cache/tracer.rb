@@ -6,10 +6,11 @@ module ActiveSupport
   module Cache
     module Tracer
       class << self
-        def instrument(tracer: OpenTracing.global_tracer, active_span: nil, dalli: false)
+        def instrument(tracer: OpenTracing.global_tracer, active_span: nil, dalli: false, trace_if: nil)
           clear_subscribers
           events = %w(read write generate delete clear)
           @subscribers = events.map do |event|
+            next unless trace_if.nil? || trace_if.call
             subscriber = ActiveSupport::Cache::Tracer::Subscriber.new(tracer: tracer,
                                                                       active_span: active_span,
                                                                       event: event)
