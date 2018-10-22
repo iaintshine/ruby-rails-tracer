@@ -11,11 +11,15 @@ module Rails
                      rack: false, middlewares: Rails.configuration.middleware,
                      active_record: true,
                      active_support_cache: true, dalli: false,
-                     action_controller: true)
+                     action_controller: true,
+                     full_trace: true)
         Rails::Rack::Tracer.instrument(tracer: tracer, middlewares: middlewares) if rack
         ActiveRecord::Tracer.instrument(tracer: tracer, active_span: active_span) if active_record
         ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: active_span, dalli: dalli) if active_support_cache
         ActionController::Tracer.instrument(tracer: tracer, active_span: active_span) if action_controller
+
+        # hold the requests until they can be written
+        @requests = {} if full_trace
       end
 
       def disable
@@ -23,6 +27,10 @@ module Rails
         ActiveSupport::Cache::Tracer.disable
         Rails::Rack::Tracer.disable
         ActionController::Tracer.disable
+      end
+
+      def requests
+        @requests
       end
     end
   end

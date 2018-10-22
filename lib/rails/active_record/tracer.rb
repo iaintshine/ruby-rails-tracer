@@ -23,21 +23,33 @@ module ActiveRecord
       alias :clear_subscribers :disable
 
       def sql(tracer: OpenTracing.global_tracer, active_span: nil, args:)
-        _, start, finish, _, payload = *args
+        event, start, finish, id, payload = *args
 
-        span = start_span(payload.fetch(:name),
-                          tracer: tracer,
-                          active_span: active_span,
-                          start_time: start,
-                          sql: payload.fetch(:sql),
-                          cached: payload.fetch(:cached, false),
-                          connection_id: payload.fetch(:connection_id))
+        if Rails::Tracer.requests.nil?
+          span = start_span(payload.fetch(:name),
+                            tracer: tracer,
+                            active_span: active_span,
+                            start_time: start,
+                            sql: payload.fetch(:sql),
+                            cached: payload.fetch(:cached, false),
+                            connection_id: payload.fetch(:connection_id))
 
-        if payload[:exception]
-          Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object] || payload[:exception])
+          if payload[:exception]
+            Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object] || payload[:exception])
+          end
+
+          span.finish(end_time: finish)
+        else
+          spaninfo = {
+            'event' => event,
+            'name' => name,
+            'start' => start,
+            'finish' => finish,
+            'tags' => {} # TODO config tags
+          }
+
+          Rails::Tracer::SpanHelpers.defer_span(id: id, spaninfo: spaninfo)
         end
-
-        span.finish(end_time: finish)
       end
 
 
