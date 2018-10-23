@@ -39,7 +39,7 @@ module ActiveRecord
           'db.type' => 'sql'
         }
 
-        if Rails::Tracer.requests.nil?
+        if !Rails::Tracer::Defer.enabled
           span = tracer.start_span(name || DEFAULT_OPERATION_NAME,
                                    child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
                                    start_time: start,
@@ -61,7 +61,7 @@ module ActiveRecord
 
           # errors aren't being propagated yet this way...
 
-          Rails::Tracer::SpanHelpers.defer_span(id: id, spaninfo: spaninfo)
+          Rails::Tracer::Defer.defer_span(id: id, spaninfo: spaninfo)
         end
       end
 

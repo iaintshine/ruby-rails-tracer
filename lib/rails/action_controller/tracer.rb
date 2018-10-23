@@ -34,7 +34,7 @@ module ActionController
           'http.path' => path,
         }
 
-        if Rails::Tracer.requests.nil?
+        if !Rails::Tracer::Defer.enabled
           span = tracer.start_span(name,
                                    child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
                                    start_time: start,
@@ -50,7 +50,7 @@ module ActionController
             'tags' => tags,
           }
 
-          Rails::Tracer::SpanHelpers.defer_span(id: id, spaninfo: spaninfo)
+          Rails::Tracer::Defer.defer_span(id: id, spaninfo: spaninfo)
         end
       end
 
@@ -69,7 +69,7 @@ module ActionController
           'db.runtime' => payload.fetch(:db_runtime),
         }
 
-        if Rails::Tracer.requests.nil? # TODO replace with better check
+        if !Rails::Tracer::Defer.enabled
           # write out the span
           span = tracer.start_span(name,
                                    child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
@@ -87,9 +87,8 @@ module ActionController
             'tags' => tags,
           }
 
-          Rails::Tracer::SpanHelpers.defer_span(id: id, spaninfo: spaninfo)
+          Rails::Tracer::Defer.defer_span(id: id, spaninfo: spaninfo)
         end
-
       end
     end
   end

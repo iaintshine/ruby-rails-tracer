@@ -82,7 +82,7 @@ module ActionView
       end
 
       def handle_notification(tracer:, active_span:, id:, name:, tags:, start:, finish:)
-        if Rails::Tracer.requests.nil?
+        if !Rails::Tracer::Defer.enabled
           span = tracer.start_span(name,
                                    child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
                                    start_time: start,
@@ -97,7 +97,7 @@ module ActionView
             'finish' => finish,
             'tags' => tags,
           }
-          Rails::Tracer::SpanHelpers.defer_span(id: id, spaninfo: spaninfo)
+          Rails::Tracer::Defer.defer_span(id: id, spaninfo: spaninfo)
         end
       end
     end
