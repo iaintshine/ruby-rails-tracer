@@ -40,7 +40,7 @@ will enabled all of them (except for Rack/ActionDispatch instrumentation).
 * `rack: boolean` whether to enable extended `Rack` instrumentation. Default: `false`.
   * `middlewares: ActionDispatch::MiddlewareStack` a middlewares stack. Default: `Rails.configuration.middleware`.
 * `action_controller: boolean` whether to enable `ActionController` instrumentation. Default: `true`.
-* `full_trace: boolean` whether to gather all traces for a request and attempt to build a parent span for the current request. Default: `true`.
+* `full_trace: boolean` whether to gather all traces for a request and attempt to build a parent span for the current request. Default: `false`.
 
 ### Usage
 

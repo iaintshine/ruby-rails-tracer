@@ -14,7 +14,7 @@ module Rails
                      active_support_cache: true, dalli: false,
                      action_controller: true,
                      action_view: true,
-                     full_trace: true)
+                     full_trace: false)
         Rails::Rack::Tracer.instrument(tracer: tracer, middlewares: middlewares) if rack
         ActiveRecord::Tracer.instrument(tracer: tracer, active_span: active_span) if active_record
         ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: active_span, dalli: dalli) if active_support_cache
