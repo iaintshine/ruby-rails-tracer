@@ -18,7 +18,7 @@ module ActionController
         @subscribers.each do |subscriber|
           ::ActiveSupport::Notifications.unsubscribe(subscriber)
         end
-        @subscribers = []
+        @subscribers.clear
         self
       end
 
