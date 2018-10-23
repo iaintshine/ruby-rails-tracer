@@ -5,7 +5,6 @@ module ActionController
 
     class << self
       def instrument(tracer: OpenTracing.global_tracer, active_span: nil)
-
         @subscribers = []
         @subscribers << ::ActiveSupport::Notifications.subscribe('start_processing.action_controller') do |*args|
           ActionController::Tracer.start_processing(tracer: tracer, active_span: active_span, args: args)
@@ -26,12 +25,13 @@ module ActionController
       def start_processing(tracer: OpenTracing.global_tracer, active_span: nil, args: {})
         event, start, finish, id, payload = *args
 
-        name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{event}"
+        path = payload.fetch(:path)
+        name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{event} #{path}"
         tags = {
           'component' => COMPONENT,
           'span.kind' => 'client',
           'http.method' => payload.fetch(:method),
-          'http.path' => payload.fetch(:path),
+          'http.path' => path,
         }
 
         if Rails::Tracer.requests.nil?
@@ -57,13 +57,14 @@ module ActionController
       def process_action(tracer: OpenTracing.global_tracer, active_span: nil, args: {})
         event, start, finish, id, payload = *args
 
-        name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{event}"
+        path = payload.fetch(:path)
+        name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{path}"
         tags = {
           'component' => COMPONENT,
           'span.kind' => 'client',
           'http.method' => payload.fetch(:method),
           'http.status_code' => payload.fetch(:status),
-          'http.path' => payload.fetch(:path),
+          'http.path' => path,
           'view.runtime' => payload.fetch(:view_runtime),
           'db.runtime' => payload.fetch(:db_runtime),
         }
