@@ -3,6 +3,7 @@ require "rails/rack/tracer"
 require "rails/active_record/tracer"
 require "rails/active_support/cache/tracer"
 require "rails/action_controller/tracer"
+require "rails/action_view/tracer"
 
 module Rails
   module Tracer
@@ -12,11 +13,13 @@ module Rails
                      active_record: true,
                      active_support_cache: true, dalli: false,
                      action_controller: true,
+                     action_view: true,
                      full_trace: true)
         Rails::Rack::Tracer.instrument(tracer: tracer, middlewares: middlewares) if rack
         ActiveRecord::Tracer.instrument(tracer: tracer, active_span: active_span) if active_record
         ActiveSupport::Cache::Tracer.instrument(tracer: tracer, active_span: active_span, dalli: dalli) if active_support_cache
         ActionController::Tracer.instrument(tracer: tracer, active_span: active_span) if action_controller
+        ActionView::Tracer.instrument(tracer: tracer, active_span: active_span) if action_view
 
         # hold the requests until they can be written
         @requests = {} if full_trace
@@ -27,6 +30,7 @@ module Rails
         ActiveSupport::Cache::Tracer.disable
         Rails::Rack::Tracer.disable
         ActionController::Tracer.disable
+        ActionView::Tracer.disable
       end
 
       def requests
