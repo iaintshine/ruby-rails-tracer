@@ -25,14 +25,25 @@ module ActiveRecord
       def sql(tracer: OpenTracing.global_tracer, active_span: nil, args:)
         event, start, finish, id, payload = *args
 
+        connection_config = ::ActiveRecord::Base.connection_config
+        name = payload.fetch(:name)
+        tags = {
+          'component' => 'ActiveRecord',
+          'span.kind' => 'client',
+          'db.user' => connection_config.fetch(:username, 'unknown'),
+          'db.instance' => connection_config.fetch(:database),
+          'db.vendor' => connection_config.fetch(:adapter),
+          'db.connection_id' => payload.fetch(:connection_id, 'unknown'),
+          'db.cached' => payload.fetch(:cached, false),
+          'db.statement' => payload.fetch(:sql),
+          'db.type' => 'sql'
+        }
+
         if Rails::Tracer.requests.nil?
-          span = start_span(payload.fetch(:name),
-                            tracer: tracer,
-                            active_span: active_span,
-                            start_time: start,
-                            sql: payload.fetch(:sql),
-                            cached: payload.fetch(:cached, false),
-                            connection_id: payload.fetch(:connection_id))
+          span = tracer.start_span(name || DEFAULT_OPERATION_NAME,
+                                   child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
+                                   start_time: start,
+                                   tags: tags)
 
           if payload[:exception]
             Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object] || payload[:exception])
@@ -42,11 +53,13 @@ module ActiveRecord
         else
           spaninfo = {
             'event' => event,
-            'name' => name,
+            'name' => name || DEFAULT_OPERATION_NAME,
             'start' => start,
             'finish' => finish,
-            'tags' => {} # TODO config tags
+            'tags' => tags,
           }
+
+          # errors aren't being propagated yet this way...
 
           Rails::Tracer::SpanHelpers.defer_span(id: id, spaninfo: spaninfo)
         end
