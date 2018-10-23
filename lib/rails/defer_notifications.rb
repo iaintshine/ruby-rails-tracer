@@ -10,6 +10,10 @@ module Rails
           @requests = {}
         end
 
+        def requests
+          @requests
+        end
+
         def defer_span(id:, spaninfo:, tracer: OpenTracing.global_tracer)
           if @requests[id].nil?
             @requests[id] = []
