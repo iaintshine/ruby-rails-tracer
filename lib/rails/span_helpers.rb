@@ -29,7 +29,7 @@ module Rails
             process_action_span.finish(end_time: spaninfo['finish'])
 
             # now that all spans are written, this can be deleted.
-            Rail::Tracer.requests.delete(id)
+            Rails::Tracer.requests.delete(id)
           else
             Rails::Tracer.requests[id] << spaninfo
           end

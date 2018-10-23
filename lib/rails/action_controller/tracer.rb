@@ -5,12 +5,13 @@ module ActionController
 
     class << self
       def instrument(tracer: OpenTracing.global_tracer, active_span: nil)
+
         @subscribers = []
         @subscribers << ::ActiveSupport::Notifications.subscribe('start_processing.action_controller') do |*args|
-          ActionController::Tracer.start_processing(tracer: tracer, args: args)
+          ActionController::Tracer.start_processing(tracer: tracer, active_span: active_span, args: args)
         end
         @subscribers << ::ActiveSupport::Notifications.subscribe('process_action.action_controller') do |*args|
-          ActionController::Tracer.process_action(tracer: tracer, args: args)
+          ActionController::Tracer.process_action(tracer: tracer, active_span: active_span, args: args)
         end
       end
 
@@ -22,10 +23,8 @@ module ActionController
         self
       end
 
-      def start_processing(tracer: nil, args: nil)
+      def start_processing(tracer: OpenTracing.global_tracer, active_span: nil, args: {})
         event, start, finish, id, payload = *args
-
-        controller = payload.fetch(:controller)
 
         name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{event}"
         tags = {
@@ -36,7 +35,12 @@ module ActionController
         }
 
         if Rails::Tracer.requests.nil?
-          # TODO send span
+          span = tracer.start_span(name,
+                                   child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
+                                   start_time: start,
+                                   tags: tags)
+
+          span.finish(end_time: finish)
         else
           spaninfo = {
             'event' => event,
@@ -50,7 +54,7 @@ module ActionController
         end
       end
 
-      def process_action(tracer: nil, args: nil)
+      def process_action(tracer: OpenTracing.global_tracer, active_span: nil, args: {})
         event, start, finish, id, payload = *args
 
         name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{event}"
@@ -65,9 +69,9 @@ module ActionController
         }
 
         if Rails::Tracer.requests.nil? # TODO replace with better check
-
           # write out the span
           span = tracer.start_span(name,
+                                   child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
                                    start_time: start,
                                    tags: tags)
 
