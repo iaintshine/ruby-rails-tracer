@@ -13,6 +13,11 @@ module Rails
             span.log(event: 'error', :'error.object' => exception)
           end
         end
+        def rack_span(payload)
+          # if rack tracing is disabled, this will just be nil
+          headers = payload.fetch(:headers, nil)
+          headers.env['rack.span'] if !headers.nil?
+        end
       end
     end
   end

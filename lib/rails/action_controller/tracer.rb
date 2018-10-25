@@ -25,6 +25,11 @@ module ActionController
       def start_processing(tracer: OpenTracing.global_tracer, active_span: nil, args: {})
         event, start, finish, id, payload = *args
 
+        # extract the rack context, if it exists
+        # it seems like this might be the earliest place env is available
+        rack_span = Rails::Tracer::SpanHelpers.rack_span(payload)
+        Rails::Tracer::Defer.add_parent(id, rack_span)
+
         path = payload.fetch(:path)
         name = "#{payload.fetch(:controller)}##{payload.fetch(:action)} #{event} #{path}"
         tags = {
