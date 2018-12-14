@@ -65,7 +65,6 @@ module ActiveRecord
         end
       end
 
-
       def start_span(operation_name, tracer: OpenTracing.global_tracer, active_span: nil, start_time: Time.now, **fields)
         connection_config = ::ActiveRecord::Base.connection_config
 

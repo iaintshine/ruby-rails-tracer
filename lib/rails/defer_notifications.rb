@@ -11,6 +11,10 @@ module Rails
           @parent_spans = {}
         end
 
+        def requests
+          @requests
+        end
+
         def add_parent(id, span)
           @parent_spans[id] = span
         end
