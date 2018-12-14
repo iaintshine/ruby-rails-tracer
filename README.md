@@ -13,7 +13,7 @@ The following instrumentation is supported:
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'rails-tracer'
+gem 'signalfx-rails-instrumentation'
 ```
 
 And then execute:
@@ -22,7 +22,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install rails-tracer
+    $ gem install signalfx-rails-instrumentation
 
 ## Rails::Tracer
 
