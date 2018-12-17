@@ -32,8 +32,21 @@ module Dalli
               'peer.port' => port,
               'peer.weight' => weight
             }
-            Method::Tracer.trace("Dalli::Server#request", tracer: tracer, child_of: active_span, tags: tags) do
+            # Method::Tracer.trace("Dalli::Server#request", tracer: tracer, child_of: active_span, tags: tags) do
+            #   request_without_instrumentation(op, *args)
+            # end
+            parent_span = active_span.respond_to?(:call) ? active_span.call : active_span
+            span = tracer.start_span("Dalli::Server#request", child_of: parent_span, tags: tags)
+
+            begin
               request_without_instrumentation(op, *args)
+            rescue  => e
+              if span
+                span.set_tag("error", true)
+                span.log_kv(key: "message", value: error.message)
+              end
+            ensure
+              span.finish() if span
             end
           end
         end
@@ -57,9 +70,22 @@ module Dalli
           alias_method :perform_without_instrumentation, :perform
 
           def perform(*args)
-            Method::Tracer.trace("Dalli::Client#perform", tracer: tracer, child_of: active_span) do
+            parent_span = active_span.respond_to?(:call) ? active_span.call : active_span
+            span = tracer.start_span("Dalli::Client#perform", child_of: active_span, tags: {})
+
+            begin
               perform_without_instrumentation(*args)
+            rescue => error
+              if span
+                span.set_tag("error", true)
+                span.log_kv(key: "message", value: error.message)
+              end
+            ensure
+              span.finish() if span
             end
+            # Method::Tracer.trace("Dalli::Client#perform", tracer: tracer, child_of: active_span) do
+            #   perform_without_instrumentation(*args)
+            # end
           end
         end
       end

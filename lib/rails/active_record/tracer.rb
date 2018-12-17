@@ -23,23 +23,47 @@ module ActiveRecord
       alias :clear_subscribers :disable
 
       def sql(tracer: OpenTracing.global_tracer, active_span: nil, args:)
-        _, start, finish, _, payload = *args
+        event, start, finish, id, payload = *args
 
-        span = start_span(payload.fetch(:name),
-                          tracer: tracer,
-                          active_span: active_span,
-                          start_time: start,
-                          sql: payload.fetch(:sql),
-                          cached: payload.fetch(:cached, false),
-                          connection_id: payload.fetch(:connection_id))
+        connection_config = ::ActiveRecord::Base.connection_config
+        name = payload.fetch(:name)
+        tags = {
+          'component' => 'ActiveRecord',
+          'span.kind' => 'client',
+          'db.user' => connection_config.fetch(:username, 'unknown'),
+          'db.instance' => connection_config.fetch(:database),
+          'db.vendor' => connection_config.fetch(:adapter),
+          'db.connection_id' => payload.fetch(:connection_id, 'unknown'),
+          'db.cached' => payload.fetch(:cached, false),
+          'db.statement' => payload.fetch(:sql),
+          'db.type' => 'sql'
+        }
 
-        if payload[:exception]
-          Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object] || payload[:exception])
+        if !Rails::Tracer::Defer.enabled
+          span = tracer.start_span(name || DEFAULT_OPERATION_NAME,
+                                   child_of: active_span.respond_to?(:call) ? active_span.call : active_span,
+                                   start_time: start,
+                                   tags: tags)
+
+          if payload[:exception]
+            Rails::Tracer::SpanHelpers.set_error(span, payload[:exception_object] || payload[:exception])
+          end
+
+          span.finish(end_time: finish)
+        else
+          spaninfo = {
+            'event' => event,
+            'name' => name || DEFAULT_OPERATION_NAME,
+            'start' => start,
+            'finish' => finish,
+            'tags' => tags,
+          }
+
+          # errors aren't being propagated yet this way...
+
+          Rails::Tracer::Defer.defer_span(id: id, spaninfo: spaninfo)
         end
-
-        span.finish(end_time: finish)
       end
-
 
       def start_span(operation_name, tracer: OpenTracing.global_tracer, active_span: nil, start_time: Time.now, **fields)
         connection_config = ::ActiveRecord::Base.connection_config

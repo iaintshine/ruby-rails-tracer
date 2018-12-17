@@ -13,7 +13,7 @@ The following instrumentation is supported:
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'rails-tracer'
+gem 'signalfx-rails-instrumentation'
 ```
 
 And then execute:
@@ -22,7 +22,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install rails-tracer
+    $ gem install signalfx-rails-instrumentation
 
 ## Rails::Tracer
 
@@ -39,6 +39,8 @@ will enabled all of them (except for Rack/ActionDispatch instrumentation).
   * `dalli: boolean` if set to `true` you will hook up into `Dalli` low-level details. Default: `false`.
 * `rack: boolean` whether to enable extended `Rack` instrumentation. Default: `false`.
   * `middlewares: ActionDispatch::MiddlewareStack` a middlewares stack. Default: `Rails.configuration.middleware`.
+* `action_controller: boolean` whether to enable `ActionController` instrumentation. Default: `true`.
+* `full_trace: boolean` whether to gather all traces for a request and attempt to build a parent span for the current request. Default: `false`.
 
 ### Usage
 
@@ -148,6 +150,21 @@ ensure
 end
 
 read("user-1")
+```
+
+## ActionController
+
+This instruments `start_processing` and `process_action` events using `ActiveSupport::Notifications` to get important information about a request once it has finished.
+
+### Usage
+
+Auto-instrumentation example.
+
+```ruby
+require 'rails/tracer'
+
+ActionController::Tracer.instrument(tracer: OpenTracing.global_tracer,
+                                    active_span: -> { OpenTracing.global_tracer.active_span })
 ```
 
 ## Development
