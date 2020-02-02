@@ -43,9 +43,12 @@ will enabled all of them (except for Rack/ActionDispatch instrumentation).
 ### Usage
 
 ```ruby
-require 'rails/tracer'
+require 'rack/tracer'
+Rails.configuration.middleware.insert_after(Rails::Rack::Logger, Rack::Tracer)
 
-Rails::Tracer.instrument
+require 'rails/tracer'
+Rails.configuration.middleware.insert_after(Rack::Tracer, Rails::Rack::Tracer)
+Rails::Tracer.instrument(active_span: -> { OpenTracing.global_tracer.active_span })
 ```
 
 ## ActionDispatch 
